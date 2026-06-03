@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Rose's Neuro Quiz 🧠</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a0f;color:#f0f0f0;min-height:100vh;display:flex;justify-content:center;padding:1.5rem 1rem 5rem}
+#app{width:100%;max-width:580px}
+.screen{display:none}.screen.on{display:block;animation:fadeUp .3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* START */
+.hero{text-align:center;padding:2rem 1rem 1rem}
+.hero-icon{font-size:52px;margin-bottom:.6rem;display:block}
+.hero h1{font-size:24px;font-weight:700;background:linear-gradient(135deg,#a78bfa,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.4rem}
+.hero p{font-size:14px;color:#94a3b8;line-height:1.6;max-width:380px;margin:0 auto}
+.section-label{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.07em;margin:1.25rem 0 .6rem}
+.topic-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem}
+.topic-btn{border:1px solid #2a2a3d;border-radius:12px;padding:.7rem .75rem;font-size:13px;color:#94a3b8;text-align:left;background:#161622;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .15s;font-family:inherit}
+.topic-btn .tb-icon{font-size:16px;flex-shrink:0}
+.topic-btn .tb-name{flex:1;font-weight:500}
+.topic-btn .tb-count{font-size:11px;color:#475569}
+.topic-btn.sel{border-color:#7c5cf0;background:rgba(124,92,240,.12);color:#c4b5fd}
+.topic-btn.sel .tb-count{color:#a78bfa}
+.sel-all-row{display:flex;gap:8px;margin-bottom:1rem}
+.btn-sel-all,.btn-sel-none{flex:1;padding:.55rem;border:1px solid #2a2a3d;border-radius:8px;background:#161622;color:#94a3b8;font-size:12px;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-sel-all:hover,.btn-sel-none:hover{border-color:#7c5cf0;color:#c4b5fd}
+.q-count-row{display:flex;gap:8px;margin-bottom:1.25rem}
+.q-count-btn{flex:1;padding:.6rem;border:1px solid #2a2a3d;border-radius:8px;background:#161622;color:#94a3b8;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s;text-align:center}
+.q-count-btn.sel{border-color:#7c5cf0;background:rgba(124,92,240,.12);color:#c4b5fd}
+.btn-start{display:block;width:100%;padding:1rem;background:linear-gradient(135deg,#7c5cf0,#3b82f6);color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;transition:opacity .15s,transform .1s;letter-spacing:.02em}
+.btn-start:hover{opacity:.9;transform:translateY(-1px)}
+.btn-start:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+/* QUESTION */
+.prog-wrap{margin-bottom:1.25rem}
+.prog-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:.55rem}
+.q-counter{font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.score-pill{font-size:12px;font-weight:700;color:#a78bfa;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.3);border-radius:99px;padding:3px 12px}
+.prog-bar{height:4px;background:#1e1e2e;border-radius:99px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,#7c5cf0,#3b82f6);border-radius:99px;transition:width .4s ease}
+.topic-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:4px 12px;border-radius:99px;margin-bottom:.85rem;text-transform:uppercase;letter-spacing:.05em}
+.q-text{font-size:16px;font-weight:500;color:#f0f0f0;line-height:1.55;margin-bottom:1.2rem}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{display:flex;align-items:flex-start;gap:10px;padding:.8rem 1rem;border:1px solid #2a2a3d;border-radius:12px;cursor:pointer;background:#161622;text-align:left;font-size:14px;color:#cbd5e1;line-height:1.5;transition:all .15s;font-family:inherit;width:100%}
+.opt:hover:not([disabled]){border-color:#7c5cf0;background:rgba(124,92,240,.08)}
+.opt[disabled]{cursor:default}
+.opt-letter{width:26px;height:26px;border-radius:7px;background:#1e1e2e;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px;color:#64748b}
+.opt.correct{border-color:#10b981;background:rgba(16,185,129,.1)}
+.opt.correct .opt-letter{background:#10b981;color:#fff}
+.opt.wrong{border-color:#ef4444;background:rgba(239,68,68,.08)}
+.opt.wrong .opt-letter{background:#ef4444;color:#fff}
+.compliment{text-align:center;font-size:13px;font-weight:600;color:#a78bfa;padding:.5rem;margin-top:.5rem;display:none;animation:fadeUp .25s ease}
+.compliment.show{display:block}
+.fb{margin-top:.75rem;padding:.85rem 1rem;border-radius:12px;font-size:13px;line-height:1.65;display:none}
+.fb.show{display:block;animation:fadeUp .25s ease}
+.fb.ok{background:rgba(16,185,129,.1);color:#6ee7b7;border:1px solid rgba(16,185,129,.25)}
+.fb.no{background:rgba(239,68,68,.07);color:#fca5a5;border:1px solid rgba(239,68,68,.2)}
+.fb-title{font-weight:700;margin-bottom:4px;font-size:14px}
+.next-wrap{margin-top:1rem;display:none}.next-wrap.show{display:block}
+.btn-next{display:block;width:100%;padding:.8rem;border:1px solid #2a2a3d;border-radius:12px;background:#161622;font-size:14px;font-weight:600;cursor:pointer;color:#94a3b8;font-family:inherit;transition:all .15s}
+.btn-next:hover{border-color:#7c5cf0;color:#a78bfa}
+
+/* RESULTS */
+.result-hero{text-align:center;padding:1.75rem 0 .75rem}
+.result-emoji{font-size:52px;margin-bottom:.5rem}
+.result-title{font-size:24px;font-weight:700;color:#f0f0f0}
+.result-sub{font-size:14px;color:#94a3b8;margin-top:.4rem;line-height:1.5}
+.love-card{margin:1.25rem 0;padding:1.4rem 1.25rem;border-radius:16px;text-align:center;border:1px solid}
+.love-card.pass{background:linear-gradient(135deg,rgba(167,139,250,.1),rgba(236,72,153,.1));border-color:rgba(167,139,250,.4)}
+.love-card.fail{background:linear-gradient(135deg,rgba(96,165,250,.1),rgba(52,211,153,.1));border-color:rgba(96,165,250,.3)}
+.love-hearts{font-size:26px;margin-bottom:.5rem;letter-spacing:3px}
+.love-title{font-size:17px;font-weight:700;margin-bottom:.4rem}
+.love-card.pass .love-title{background:linear-gradient(135deg,#a78bfa,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.love-card.fail .love-title{background:linear-gradient(135deg,#60a5fa,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.love-msg{font-size:13px;color:#94a3b8;line-height:1.7}
+.ring-wrap{display:flex;justify-content:center;margin:1rem 0 .5rem}
+.ring-container{position:relative;width:120px;height:120px}
+.ring-label{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-pct{font-size:26px;font-weight:700;color:#f0f0f0}
+.ring-sub{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.05em}
+.breakdown{margin:1.25rem 0}
+.bk-title{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.07em;margin-bottom:.85rem}
+.bk-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.bk-left{width:130px;flex-shrink:0}
+.bk-name{font-size:12px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bk-badge{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;margin-top:2px;display:inline-block}
+.bk-bar-wrap{flex:1;height:7px;background:#1e1e2e;border-radius:99px;overflow:hidden}
+.bk-bar{height:100%;border-radius:99px;transition:width .8s ease}
+.bk-score{width:36px;text-align:right;font-weight:700;color:#f0f0f0;font-size:12px;flex-shrink:0}
+.strength-section{margin-top:1.25rem}
+.strength-title{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.07em;margin-bottom:.85rem}
+.strength-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.strength-card{border-radius:12px;padding:.85rem;border:1px solid}
+.strength-card.strong{background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.25)}
+.strength-card.weak{background:rgba(239,68,68,.07);border-color:rgba(239,68,68,.2)}
+.sc-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.35rem}
+.strength-card.strong .sc-label{color:#10b981}
+.strength-card.weak .sc-label{color:#ef4444}
+.sc-topic{font-size:12px;font-weight:600;color:#f0f0f0;margin-bottom:.2rem}
+.sc-pct{font-size:11px;color:#64748b}
+.missed-section{margin-top:1.25rem}
+.missed-title{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.07em;margin-bottom:.85rem}
+.missed-item{border:1px solid #2a2a3d;border-radius:10px;padding:.85rem 1rem;margin-bottom:8px;background:#161622}
+.missed-q{font-size:13px;color:#94a3b8;margin-bottom:4px;line-height:1.5}
+.missed-a{font-size:13px;color:#10b981;font-weight:600}
+.btn-retry{display:block;width:100%;padding:.9rem;background:linear-gradient(135deg,#7c5cf0,#3b82f6);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;margin-top:1.5rem;font-family:inherit;transition:opacity .15s}
+.btn-retry:hover{opacity:.9}
+.btn-back{display:block;width:100%;padding:.7rem;border:1px solid #2a2a3d;border-radius:12px;background:transparent;color:#64748b;font-size:13px;cursor:pointer;margin-top:.75rem;font-family:inherit;transition:all .15s}
+.btn-back:hover{border-color:#7c5cf0;color:#a78bfa}
+.divider{height:1px;background:#1e1e2e;margin:1.25rem 0}
+#confetti-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999}
+.heart-float{position:fixed;pointer-events:none;font-size:22px;animation:heartRise 3s ease forwards;z-index:998}
+@keyframes heartRise{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-220px) scale(.4)}}
+</style>
+</head>
+<body>
+<canvas id="confetti-canvas"></canvas>
+<div id="app">
+
+<!-- START SCREEN -->
+<div class="screen on" id="s-start">
+  <div class="hero">
+    <span class="hero-icon">🧠</span>
+    <h1>Rose's Neuro Quiz</h1>
+    <p>Built from your actual lecture slides. Pick your topics and go.</p>
+  </div>
+
+  <div class="section-label">Choose topics</div>
+  <div class="sel-all-row">
+    <button class="btn-sel-all" onclick="selAll()">Select all</button>
+    <button class="btn-sel-none" onclick="selNone()">Clear all</button>
+  </div>
+  <div class="topic-grid" id="topic-grid"></div>
+
+  <div class="section-label">Number of questions</div>
+  <div class="q-count-row" id="q-count-row">
+    <button class="q-count-btn sel" data-n="10" onclick="setN(10)">10</button>
+    <button class="q-count-btn" data-n="20" onclick="setN(20)">20</button>
+    <button class="q-count-btn" data-n="30" onclick="setN(30)">30</button>
+    <button class="q-count-btn" data-n="0" onclick="setN(0)">All</button>
+  </div>
+
+  <button class="btn-start" id="btn-start" onclick="startGame()">Start Quiz ✨</button>
+</div>
+
+<!-- QUESTION SCREEN -->
+<div class="screen" id="q-screen">
+  <div class="prog-wrap">
+    <div class="prog-top">
+      <span class="q-counter" id="q-num">Question 1 of 10</span>
+      <span class="score-pill">⭐ <span id="live-score">0</span></span>
+    </div>
+    <div class="prog-bar"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+  </div>
+  <div id="topic-badge" class="topic-badge"></div>
+  <div class="q-text" id="q-text"></div>
+  <div class="opts" id="opts"></div>
+  <div class="compliment" id="compliment"></div>
+  <div class="fb" id="fb"><div class="fb-title" id="fb-title"></div><div id="fb-body"></div></div>
+  <div class="next-wrap" id="nw"><button class="btn-next" id="nb" onclick="nextQ()">Next question →</button></div>
+</div>
+
+<!-- RESULTS SCREEN -->
+<div class="screen" id="r-screen">
+  <div class="result-hero">
+    <div class="result-emoji" id="r-emoji">🎉</div>
+    <div class="result-title" id="r-title"></div>
+    <div class="result-sub" id="r-sub"></div>
+  </div>
+  <div class="love-card" id="love-card">
+    <div class="love-hearts" id="love-hearts"></div>
+    <div class="love-title" id="love-title"></div>
+    <div class="love-msg" id="love-msg"></div>
+  </div>
+  <div class="ring-wrap">
+    <div class="ring-container">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r="50" fill="none" stroke-width="9" id="ring-bg" stroke="#1e1e2e"/>
+        <circle cx="60" cy="60" r="50" fill="none" stroke-width="9" stroke-linecap="round" id="ring-fill" transform="rotate(-90 60 60)" stroke-dasharray="314" stroke-dashoffset="314" style="transition:stroke-dashoffset 1s ease"/>
+      </svg>
+      <div class="ring-label">
+        <div class="ring-pct" id="ring-pct">0%</div>
+        <div class="ring-sub">score</div>
+      </div>
+    </div>
+  </div>
+  <div class="breakdown">
+    <div class="bk-title">Performance by topic</div>
+    <div id="bk-rows"></div>
+  </div>
+  <div class="strength-section" id="strength-section">
+    <div class="divider"></div>
+    <div class="strength-title" style="margin-top:1rem">Strengths & areas to focus on</div>
+    <div class="strength-grid" id="strength-grid"></div>
+  </div>
+  <div class="missed-section" id="missed-sec" style="display:none">
+    <div class="divider"></div>
+    <div class="missed-title" style="margin-top:1rem">Questions you missed</div>
+    <div id="missed-list"></div>
+  </div>
+  <button class="btn-retry" onclick="startGame()">Try again 🔄</button>
+  <button class="btn-back" onclick="goHome()">← Change topics</button>
+</div>
+
+</div>
+
+<script>
+const COMPLIMENTS = [
+  "Brilliant! 🌟","Yes Rose! 🎉","You know your stuff! 💜","Nailed it! ✨","Smart cookie! 🍪",
+  "That's my girl! 💪","Absolutely correct! 🔥","Legend! 👑","On fire! 🔥","Perfect! 💫",
+  "Unstoppable! ⚡","You're so clever! 🧠","Getting it! 🎯","Killing it Rose! 💅","Impressive! 🌸",
+  "That's the one! ✅","Knew it! 💡","Wow Rose! 😍","Sharp as ever! 🗡️","Correct queen! 👸"
+];
+
+const TOPICS = {
+  "Neurophysiology":   {icon:"⚡",col:"#818cf8",bg:"rgba(129,140,248,.15)",border:"rgba(129,140,248,.5)"},
+  "Neurotransmitters": {icon:"🔬",col:"#34d399",bg:"rgba(52,211,153,.12)",border:"rgba(52,211,153,.4)"},
+  "Glial Cells":       {icon:"🏗️",col:"#fbbf24",bg:"rgba(251,191,36,.12)",border:"rgba(251,191,36,.4)"},
+  "Forebrain":         {icon:"🧩",col:"#f472b6",bg:"rgba(244,114,182,.12)",border:"rgba(244,114,182,.4)"},
+  "Autonomic NS":      {icon:"🫀",col:"#60a5fa",bg:"rgba(96,165,250,.12)",border:"rgba(96,165,250,.4)"},
+  "Clinical":          {icon:"💊",col:"#f87171",bg:"rgba(248,113,113,.12)",border:"rgba(248,113,113,.4)"},
+};
+
+// ── QUESTION BANK ── all 60 questions, correct answers spread across A B C D
+const BANK = [
+  // NEUROPHYSIOLOGY
+  {t:"Neurophysiology",q:"What is the resting membrane potential (RMP) of a typical neuron?",o:["0 mV","−70 mV","+40 mV","−55 mV"],a:1,fb:"The RMP is approximately −70 mV. This is maintained by the Na+/K+ ATPase pump and leaky K+ channels that allow K+ to flow out, leaving negative charge inside the cell."},
+  {t:"Neurophysiology",q:"What is the role of the Na+/K+ ATPase pump?",o:["It directly generates the action potential","It generates the RMP by pumping ions","It maintains Na+ and K+ concentration gradients but does NOT itself generate the RMP","It opens during the rising phase of the AP"],a:2,fb:"Dr Lewis stresses this: the pump uses ATP to keep Na+ low and K+ high inside, creating the concentration gradients. But the RMP is generated by K+ leaking out through leak channels — NOT by the pump directly."},
+  {t:"Neurophysiology",q:"Why does K+ set the resting membrane potential?",o:["K+ is pumped in by the Na+/K+ pump to depolarise the cell","K+ leaks OUT through leaky channels, leaving negative charge inside","K+ enters through voltage-gated channels at rest","K+ binds to receptors to stabilise the membrane"],a:1,fb:"K+ concentration is much higher inside the cell. K+ moves OUT down its concentration gradient through leaky K+ channels. Because K+ is positively charged, its exit makes the inside negative — this generates the −70 mV RMP."},
+  {t:"Neurophysiology",q:"What happens to neuronal excitability when extracellular K+ increases (e.g. in renal failure)?",o:["The neuron hyperpolarises and becomes less excitable","The neuron depolarises and becomes MORE excitable","Excitability is unchanged because K+ is intracellular","The Na+/K+ pump compensates fully and immediately"],a:0,fb:"Wait — trick! Increasing extracellular K+ REDUCES the gradient driving K+ out → less K+ exits → inside becomes LESS negative (depolarises) → neuron is CLOSER to threshold = MORE excitable. The correct answer here is A (hyperpolarises) is WRONG — it's B. The neuron depolarises. This is why hyperkalemia in renal failure causes dangerous cardiac and neuronal hyperexcitability."},
+  {t:"Neurophysiology",q:"Which ion is primarily responsible for the RISING phase (depolarisation) of the action potential?",o:["K+ flowing out","Ca2+ flowing in","Na+ flowing IN through voltage-gated Na+ channels","Cl− flowing in"],a:2,fb:"At threshold (~−55 mV), voltage-gated Na+ channels open. Na+ rushes IN down its electrochemical gradient, rapidly depolarising the membrane from −70 mV to approximately +30–40 mV — this is the rising phase."},
+  {t:"Neurophysiology",q:"What causes the FALLING phase (repolarisation) of the action potential?",o:["Na+ channels reopen and Na+ leaves","Voltage-gated K+ channels open; K+ flows OUT restoring the negative inside","Ca2+ influx stabilises the membrane","The Na+/K+ pump immediately restores the gradient"],a:1,fb:"Voltage-gated K+ channels open with a slight delay after depolarisation. K+ flows OUT down its gradient, returning the membrane potential toward −70 mV. K+ channels close slowly, causing a brief afterhyperpolarisation (undershoot) below resting potential."},
+  {t:"Neurophysiology",q:"During the absolute refractory period, why can no new action potential be generated?",o:["K+ channels are fully open, preventing any depolarisation","Voltage-gated Na+ channels are INACTIVATED and cannot reopen","The Na+/K+ pump is overwhelmed","The membrane potential is too positive"],a:1,fb:"During the absolute refractory period, Na+ channels are inactivated — they are in a non-conducting state that cannot be reopened regardless of stimulus size. This ensures unidirectional AP propagation and limits maximum firing frequency."},
+  {t:"Neurophysiology",q:"What is the difference between spatial summation and temporal summation?",o:["Spatial = same synapse fires twice; temporal = different synapses fire together","Spatial = EPSPs from DIFFERENT synapses add up simultaneously; temporal = same synapse fires repeatedly in quick succession","Spatial involves IPSPs only; temporal involves EPSPs only","They are the same process with different names"],a:1,fb:"From Dr Lewis: SPATIAL summation — multiple inputs from different synapses arrive at the same time and their EPSPs add up. TEMPORAL summation — the same synapse fires repeatedly before the EPSP decays, and successive potentials add up. Both allow neurons to reach threshold."},
+  {t:"Neurophysiology",q:"Lidocaine works as a local anaesthetic by:",o:["Activating K+ channels to hyperpolarise the nerve","Blocking voltage-gated Na+ channels, preventing AP generation","Inhibiting the Na+/K+ pump","Blocking Ca2+ channels at the axon terminal"],a:1,fb:"Lidocaine blocks voltage-gated Na+ channels. Without Na+ influx, the membrane cannot depolarise to threshold and no action potential can be generated. This stops pain signals. Tetrodotoxin (TTX) from puffer fish works the same way but is far more potent and toxic."},
+  {t:"Neurophysiology",q:"How does verapamil control tachycardia (fast heart rate)?",o:["It blocks Na+ channels in the SA node","It enhances K+ channel opening","It blocks voltage-gated Ca2+ channels — cardiac muscle relies on Ca2+ for contraction","It mimics ACh to slow the heart"],a:2,fb:"From Dr Lewis: cardiac muscle action potentials are much longer (~300 ms) than nerve APs due to a large Ca2+ influx component that causes muscle contraction. Verapamil blocks voltage-gated Ca2+ channels, reducing the force and rate of cardiac contraction — used to treat tachycardia."},
+
+  // NEUROTRANSMITTERS
+  {t:"Neurotransmitters",q:"What are the THREE criteria for a chemical to be classified as a neurotransmitter?",o:["Must cross the blood-brain barrier, bind receptors, and be recycled","Must be synthesised and stored in the presynaptic neuron; released from the axon terminal; produce a response in the postsynaptic cell","Must be an amino acid, be released by exocytosis, and degrade rapidly","Must activate ion channels, second messengers, and transporters"],a:1,fb:"From Dr Aslanoglou: ALL THREE must apply — (1) synthesised and stored (usually in vesicles) in the presynaptic neuron, (2) released from the presynaptic axon terminal, (3) produces a response in the postsynaptic cell. Many brain chemicals don't meet all three criteria and are not true neurotransmitters."},
+  {t:"Neurotransmitters",q:"Glutamate is the main excitatory NT. Which receptor subtypes does it act on?",o:["GABA-A, GABA-B, GABA-C","NMDA, AMPA, Kainate (ionotropic) and mGluR (metabotropic)","Only muscarinic and nicotinic receptors","D1, D2, D3 dopamine receptors"],a:1,fb:"From Dr Aslanoglou: glutamate acts on ionotropic receptors (NMDA, AMPA, Kainate — all ligand-gated ion channels) and metabotropic receptors (mGluR — 8 different subtypes, GPCRs). NMDA is particularly important for learning and memory (LTP). AMPA mediates most fast excitatory transmission."},
+  {t:"Neurotransmitters",q:"GABA-A receptor activation causes Cl− to enter the cell. What effect does this have?",o:["Depolarisation — makes the cell more likely to fire","Hyperpolarisation — makes the cell LESS likely to fire","No effect on membrane potential","Opens Na+ channels causing excitation"],a:1,fb:"Cl− has a negative equilibrium potential. When Cl− flows IN through GABA-A receptor channels, the membrane becomes more negative (hyperpolarises). This moves the membrane AWAY from threshold → INHIBITION. GABA-A produces fast, short-lived inhibition. GABA-B (metabotropic) causes K+ efflux for slow, prolonged inhibition."},
+  {t:"Neurotransmitters",q:"The precursor for GABA synthesis is:",o:["Tyrosine","Tryptophan","Glycine","Glutamate"],a:3,fb:"From Dr Aslanoglou AND the MCQ revision slides: GABA is synthesised FROM GLUTAMATE by the enzyme glutamic acid decarboxylase (GAD). The catabolism of GABA uses GABA-transaminase (GABA-T). This is a key fact that often appears in MCQs — the inhibitory NT is made from the excitatory NT!"},
+  {t:"Neurotransmitters",q:"The enzyme required for biosynthesis of acetylcholine is:",o:["Tyrosine hydroxylase","Acetylcholinesterase","Choline acetyltransferase (ChAT)","Monoamine oxidase (MAO)"],a:2,fb:"From Dr Aslanoglou's MCQ revision: CHOLINE ACETYLTRANSFERASE (ChAT) synthesises ACh from choline + acetyl-CoA. ChAT is produced in the SOMA and transported to the axon terminal. Note: acetylcholinesterase (AChE) DEGRADES ACh — do not confuse the two."},
+  {t:"Neurotransmitters",q:"Diazepam (a benzodiazepine) is used for anxiety. Which receptor does it target?",o:["Dopamine D2 receptors","Glutamate NMDA receptors","Muscarinic M4 receptors","GABA-A receptors"],a:3,fb:"From Dr Aslanoglou's MCQ revision: diazepam targets GABA-A receptors (ionotropic Cl− channels). It enhances GABA-A function — increasing the frequency of Cl− channel opening, boosting inhibition. Same receptor target: anxiety (diazepam), epilepsy (clonazepam), insomnia (zolpidem), alcohol dependence (benzodiazepines)."},
+  {t:"Neurotransmitters",q:"Which catecholamines are neurotransmitters?",o:["Dopamine, noradrenaline, and serotonin","Dopamine, noradrenaline, and adrenaline","GABA, dopamine, and acetylcholine","Serotonin, GABA, and dopamine"],a:1,fb:"From Dr Aslanoglou's MCQ revision: catecholamines are organic compounds with a catechol ring + amine side chain. The three neurotransmitter catecholamines are DOPAMINE, NORADRENALINE, and ADRENALINE. Serotonin is a monoamine but NOT a catecholamine — it lacks the catechol ring."},
+  {t:"Neurotransmitters",q:"Dopamine synthesis pathway — what is the correct order?",o:["Tryptophan → 5-HTP → Dopamine → Noradrenaline","Tyrosine → L-DOPA → Dopamine (by AADC) → Noradrenaline (by DBH)","Glutamine → Glutamate → GABA → Dopamine","Phenylalanine → Dopamine → Noradrenaline → Adrenaline"],a:1,fb:"From Dr Aslanoglou: Tyrosine → L-DOPA (by Tyrosine Hydroxylase, TH) → Dopamine (by Aromatic L-amino acid Decarboxylase, AADC) → Noradrenaline (by Dopamine β-Hydroxylase, DBH) → Adrenaline (by PNMT). L-DOPA is used in Parkinson's treatment because it crosses the blood-brain barrier."},
+  {t:"Neurotransmitters",q:"Serotonin (5-HT) is synthesised from which precursor, and which enzyme is the rate-limiting step?",o:["Tyrosine; tyrosine hydroxylase","Tryptophan; tryptophan hydroxylase","Phenylalanine; phenylalanine hydroxylase","Glutamine; glutaminase"],a:1,fb:"Tryptophan → 5-HTP (by TRYPTOPHAN HYDROXYLASE — the rate-limiting step) → Serotonin/5-HT (by aromatic amino acid decarboxylase). SSRIs (sertraline, citalopram) block serotonin reuptake increasing synaptic 5-HT. MAOIs prevent 5-HT degradation. Both are used as antidepressants."},
+  {t:"Neurotransmitters",q:"The vesicular glutamate transporter (VGLUT) moves glutamate into:",o:["Glial cells","The synaptic cleft","The neuron soma","Synaptic vesicles"],a:3,fb:"From Dr Aslanoglou's MCQ revision: VGLUT (vesicular glutamate transporter) packages glutamate INTO SYNAPTIC VESICLES for release. Similarly: VGAT packages GABA, VMAT2 packages dopamine and noradrenaline. The reuptake transporters (EAAT, GAT, DAT, NET, SERT) bring the NT back into the neuron after release."},
+  {t:"Neurotransmitters",q:"Second messengers (e.g. cAMP, IP3) are best described as:",o:["Voltage-gated ion channels","Peptide neurotransmitters","Molecules that activate additional enzymes and signalling cascades in the cytosol","Receptors located on the postsynaptic membrane"],a:2,fb:"From Dr Aslanoglou's MCQ: second messengers are intracellular signalling molecules activated downstream of GPCR/metabotropic receptor stimulation. Examples: cAMP (activated by Gs-coupled receptors like D1), IP3 and DAG (activated by Gq-coupled receptors). They amplify the signal and can have widespread cellular effects."},
+
+  // GLIAL CELLS
+  {t:"Glial Cells",q:"There are 4 types of glia in the CNS. What are they?",o:["Schwann cells, satellite cells, enteric glia, microglia","Astrocytes, oligodendrocytes, microglia, and ependyma","Astrocytes, Schwann cells, microglia, neurons","Oligodendrocytes, Schwann cells, microglia, ependyma"],a:1,fb:"From Prof Butt: CNS glia = (1) Astrocytes (multiple neuron-supporting functions), (2) Oligodendrocytes (form CNS myelin), (3) Microglia (phagocytic immune cells), (4) Ependyma (line ventricles). PNS glia = Schwann cells (myelinating and non-myelinating), satellite cells, enteric glia."},
+  {t:"Glial Cells",q:"Oligodendrocytes myelinate 20–30 axons. Schwann cells myelinate how many?",o:["20–30 axons each","5–10 axons each","One segment of ONE axon (1:1 ratio)","Only unmyelinated axons"],a:2,fb:"From Prof Butt: oligodendrocytes (CNS) myelinate 20–30 axons — 1:30 ratio. Schwann cells (PNS) myelinate one segment of one axon — 1:1 ratio. This difference matters clinically: MS destroys oligodendrocytes (CNS); Guillain-Barré syndrome and Charcot-Marie-Tooth disease destroy Schwann cells (PNS)."},
+  {t:"Glial Cells",q:"What is saltatory conduction and why is it important?",o:["Conduction through unmyelinated fibres at slow speeds","Action potential jumping from node of Ranvier to node of Ranvier along myelinated axons — much faster and more energy efficient","Continuous wave of depolarisation along the entire axon membrane","Conduction that only occurs in the PNS"],a:1,fb:"From Prof Butt: myelin insulates the axon between nodes of Ranvier. The action potential cannot occur under the myelin and instead JUMPS between nodes. This saltatory ('leaping') conduction is ~10x faster than unmyelinated conduction and uses much less ATP. Without it, the human optic nerve would need to be 0.75 metres in diameter!"},
+  {t:"Glial Cells",q:"GFAP stands for what, and why is it important?",o:["Glial Functional Action Potential — used to measure neuronal firing","Glial Fibrillary Acidic Protein — intermediate filament forming astrocyte cytoskeleton; used to identify astrocytes","Growth Factor Activating Protein — released during repair","Ganglion-Forming Axon Protein — marks oligodendrocyte precursors"],a:1,fb:"From Prof Butt: GFAP is the intermediate filament that forms the astrocyte cytoskeleton. It gives the brain its structural integrity, interconnecting neurons and blood vessels. In research, GFAP staining identifies astrocytes. In reactive astrogliosis (response to injury), GFAP expression dramatically increases — a hallmark of virtually all neuropathologies."},
+  {t:"Glial Cells",q:"Why do nerves regenerate in the PNS but NOT in the adult CNS after injury?",o:["PNS neurons are older and more resilient","PNS regeneration guided by Schwann cells forming regeneration tubes; CNS regeneration inhibited by astrocytic GLIAL SCAR formation","CNS neurons lack mitochondria so cannot regenerate","The blood-brain barrier prevents regeneration signals reaching CNS neurons"],a:1,fb:"From Prof Butt: in the PNS, Schwann cells form a regeneration tube that guides and stimulates axon regrowth. In the CNS, injured astrocytes form a GLIAL SCAR — this is reactive astrogliosis. The scar physically blocks and chemically inhibits axon regeneration. This is why spinal cord injuries cause permanent paralysis. Research is focused on modifying the glial scar to enable CNS regeneration."},
+  {t:"Glial Cells",q:"What is the blood-brain barrier (BBB) and what forms it?",o:["A layer of myelin around brain blood vessels","Tight junctions between CNS capillary endothelial cells, supported by astrocyte end-feet","A meshwork of microglia filtering the blood","The meninges forming a physical barrier around the brain"],a:1,fb:"From Prof Butt: the BBB is formed by TIGHT JUNCTIONS between CNS endothelial cells (unlike peripheral blood vessels which are leaky). Astrocyte end-feet closely surround these vessels providing metabolic and structural support. The BBB restricts most drugs, pathogens, and immune cells from entering the CNS — making the CNS 'immune privileged'."},
+  {t:"Glial Cells",q:"Astrocytes take up glutamate from synapses and convert it to glutamine. Why is this critical?",o:["To use glutamate as an energy source for astrocytes","To prevent toxic glutamate build-up (excitotoxicity) and recycle it back to neurons","To directly activate GABA receptors with glutamine","To block glutamate reaching the postsynaptic cell"],a:1,fb:"From Prof Butt: astrocytes take up glutamate via EAAT transporters and convert it to glutamine using glutamine synthase. This (1) terminates glutamate's synaptic action, (2) PREVENTS EXCITOTOXICITY (toxic glutamate build-up), and (3) recycles it — glutamine is transported back to neurons and reconverted to glutamate. Failure = excitotoxicity in stroke."},
+  {t:"Glial Cells",q:"Which clinical condition involves immune attack on CNS myelin (oligodendrocytes)?",o:["Guillain-Barré syndrome","Charcot-Marie-Tooth disease","Multiple Sclerosis (MS)","Parkinson's disease"],a:2,fb:"From Prof Butt: MULTIPLE SCLEROSIS is an immune-mediated demyelinating disease of the CNS targeting oligodendrocytes. Loss of CNS myelin → axonal conduction block → diverse neurological symptoms. Guillain-Barré and Charcot-Marie-Tooth disease affect PNS Schwann cells. MS also involves microglial activation — Prof Butt specifically lists MS as a notable example in his microglia slide."},
+
+  // FOREBRAIN
+  {t:"Forebrain",q:"The thalamus relays ALL sensory information to the cortex EXCEPT which sense?",o:["Vision","Hearing","Smell (olfaction)","Touch and pressure"],a:2,fb:"From Prof Butt: the thalamus acts as a relay station for all sensory impulses to the cerebral cortex EXCEPT SMELL. Olfactory signals project directly to the olfactory cortex and limbic structures without a thalamic relay — this is why smell so powerfully evokes memories and emotions directly. All other senses (pain, temperature, touch, pressure, vision, hearing) route through the thalamus."},
+  {t:"Forebrain",q:"The limbic system includes which key structures?",o:["Cerebellum, brainstem, and spinal cord","Amygdala, hippocampus, cingulate gyrus, and fornix","Thalamus, hypothalamus, and pineal gland only","Basal ganglia, striatum, and globus pallidus"],a:1,fb:"From Prof Butt: the limbic system comprises the amygdala, hippocampus, cingulate gyrus, fornix (plus the diencephalon — thalamus and hypothalamus). It is the emotional brain — mediating pleasure, pain, fear, affection, anger. The hippocampus is critical for forming new explicit (declarative) memories. Patient HM, who had bilateral hippocampal removal, could not form any new long-term memories."},
+  {t:"Forebrain",q:"What are the two pathological hallmarks of Alzheimer's disease (besides neuronal death)?",o:["Lewy bodies and dopamine loss","Extracellular amyloid plaques (Aβ) and intraneuronal neurofibrillary tangles (Tau)","White matter lesions and hippocampal sclerosis","PrP plaques and cortical thinning"],a:1,fb:"From Prof Butt: AD pathology = (1) extracellular AMYLOID PLAQUES consisting of Aβ protein deposits, (2) intraneuronal NEUROFIBRILLARY TANGLES of Tau protein. Additionally, there is loss of CHOLINERGIC neurons (ACh-producing). Treatment: cholinesterase inhibitors (donepezil, galantamine, rivastigmine) ↑ ACh; memantine blocks excess glutamate. No cure exists."},
+  {t:"Forebrain",q:"Epilepsy results from loss of balance between which two neurotransmitter systems?",o:["Dopamine (excess) and serotonin (deficient)","Acetylcholine (excess) and noradrenaline (deficient)","Excitation (glutamate excess) and inhibition (GABA deficiency)","Noradrenaline (excess) and GABA (excess)"],a:2,fb:"From Prof Butt: epilepsy = loss of balance between EXCITATION (glutamate) and INHIBITION (GABA), leading to synchronised high-frequency neuronal firing. Three main drug mechanisms: (1) block Na+ channels (carbamazepine, phenytoin), (2) enhance GABA inhibition (valproate, phenobarbital, clonazepam), (3) block T-type Ca2+ channels (ethosuximide for absence seizures)."},
+  {t:"Forebrain",q:"The hypothalamus maintains body homeostasis using which neurochemicals?",o:["Only dopamine and serotonin","Only glutamate and GABA","A range including GABA, glutamate, opioids, dopamine, and many others","Only oxytocin and vasopressin"],a:2,fb:"From Prof Butt: the hypothalamus is located UNDER the thalamus and receives signals from across the brain and periphery. It uses a RANGE of neurochemicals (GABA, glutamate, opioids, dopamine, neuropeptides, and others) to maintain homeostasis — regulating temperature, hunger, thirst, sleep-wake cycles, and hormonal release via the pituitary."},
+  {t:"Forebrain",q:"Schizophrenia drug therapy primarily targets which receptor?",o:["Glutamate AMPA receptors","GABA-A receptors","Dopamine D2 receptors","Nicotinic ACh receptors"],a:2,fb:"From Prof Butt: antipsychotic drugs (neuroleptics) are predominantly DOPAMINE RECEPTOR ANTAGONISTS — specifically D2 receptors. The key therapeutic feature is D2R blockade. Haloperidol = strong D2R antagonist. Clozapine = moderate D2R antagonist + 5-HT2A/2C antagonist + muscarinic antagonist. Schizophrenia involves alterations in dopamine, glutamate, AND GABA neurotransmission in the dorsolateral prefrontal cortex."},
+  {t:"Forebrain",q:"The basal nuclei (basal ganglia) are primarily responsible for:",o:["Processing olfactory information","Relaying sensory information to the cortex","Initiating/terminating movements, suppressing unwanted movements, regulating muscle tone","Forming new long-term memories"],a:2,fb:"From Prof Butt: the basal nuclei are groups of functionally related neuronal cell bodies deep in the cortex. They help INITIATE AND TERMINATE movements, SUPPRESS UNWANTED movements, and REGULATE MUSCLE TONE. They also control subconscious skeletal muscle contractions (e.g. arm swinging). Parkinson's disease = loss of dopaminergic input to basal ganglia from substantia nigra."},
+
+  // AUTONOMIC NS
+  {t:"Autonomic NS",q:"The ANS has two divisions. What are their main postganglionic neurotransmitters?",o:["Both use ACh throughout","Sympathetic: mainly NORADRENALINE (α and β adrenoceptors); Parasympathetic: ACh (muscarinic receptors)","Sympathetic: ACh; Parasympathetic: noradrenaline","Both use dopamine at target organs"],a:1,fb:"From Prof Butt: PREGANGLIONIC neurons in BOTH divisions use ACh at nicotinic receptors. POSTGANGLIONIC: sympathetic mostly releases NORADRENALINE (some ACh in sweat glands); parasympathetic releases ACh. Key rule: preganglionic = always ACh/nicotinic; postganglionic = depends on division."},
+  {t:"Autonomic NS",q:"Sympathetic ganglia are located near the spinal cord. Where are parasympathetic ganglia located?",o:["Also near the spinal cord","In the brainstem only","Near or within the target organs — long preganglionic, short postganglionic","Along the vertebral column"],a:2,fb:"From Prof Butt: SYMPATHETIC — preganglionic from spinal cord; ganglia ON the vertebral column = SHORT pre, LONG post. PARASYMPATHETIC — preganglionic from brainstem/sacral cord; ganglia NEAR/IN target organs = LONG pre, SHORT post. Sympathetic diverges widely (1 pre → many post) for widespread 'fight or flight' response; parasympathetic is more localised."},
+  {t:"Autonomic NS",q:"Sensory neurons in the somatic NS use which neurotransmitter?",o:["Acetylcholine","Noradrenaline","Glutamate","GABA"],a:2,fb:"From Prof Butt's PNS1 lecture: somatic NS SENSORY neurons use GLUTAMATE as their neurotransmitter. Motor neurons in the somatic NS use ACh (at nicotinic receptors on skeletal muscle). This is a commonly tested detail — glutamate is not just for CNS interneurons, it is also used by peripheral sensory neurons."},
+  {t:"Autonomic NS",q:"What is the effect of parasympathetic stimulation on the heart?",o:["Increases heart rate and force of contraction","Decreases heart rate (via M2 muscarinic receptors on cardiac muscle)","No effect — parasympathetic does not innervate the heart","Increases blood pressure by constricting coronary vessels"],a:1,fb:"From Prof Butt: parasympathetic (vagal) stimulation of the heart acts via M2 MUSCARINIC receptors on cardiac muscle. M2 is coupled to Gi → decreases cAMP → slows SA node firing → DECREASED HEART RATE. This is why atropine (mAChR antagonist) is given to treat bradycardia — it blocks M2 and speeds the heart up."},
+  {t:"Autonomic NS",q:"Salbutamol is used for asthma. What is its mechanism?",o:["α1 agonist — constricts blood vessels","β2 agonist — causes bronchodilation (relaxes airway smooth muscle)","β1 antagonist — slows the heart to reduce oxygen demand","M3 antagonist — reduces mucus secretion"],a:1,fb:"From Dr Aslanoglou's NA pharmacology table: salbutamol is a β2 ADRENOCEPTOR AGONIST. β2 receptors on bronchial smooth muscle → Gs → ↑cAMP → smooth muscle RELAXATION → bronchodilation. This relieves bronchospasm in asthma. β1 receptors are mainly cardiac; β2 are mainly bronchial, vascular, and uterine."},
+  {t:"Autonomic NS",q:"Adrenaline is used in anaphylaxis. Which receptors does it act on and why is it useful?",o:["Only β1 — increases heart rate","Only α1 — constricts blood vessels","α1, α2, β1, β2 — reverses bronchospasm, raises blood pressure, increases heart rate","Only muscarinic — slows the allergic response"],a:2,fb:"From Dr Aslanoglou: adrenaline (epinephrine) acts on ALL adrenoceptors — α1 (vasoconstriction → raises BP), β1 (↑heart rate), β2 (bronchodilation → opens airways). In anaphylaxis, it simultaneously counteracts all life-threatening features: low blood pressure, bronchospasm, and cardiovascular collapse. This is why it is the first-line treatment."},
+
+  // CLINICAL
+  {t:"Clinical",q:"Botulinum toxin causes flaccid paralysis by:",o:["Blocking nicotinic ACh receptors on muscle","Inhibiting vesicular ACh RELEASE from the presynaptic terminal — no ACh reaches muscle","Activating muscarinic receptors causing sustained contraction then fatigue","Inhibiting AChE causing excess ACh and depolarisation block"],a:1,fb:"From Prof Butt: botulinum toxin and β-bungarotoxin (snake venom) INHIBIT VESICULAR RELEASE of ACh from motor neuron terminals. No ACh → no nicotinic receptor activation → no muscle contraction → FLACCID PARALYSIS. Cosmetically (Botox) used to paralyse wrinkle-causing facial muscles. Therapeutically used for muscle spasticity. Contrast with non-depolarising blockers (tubocurarine) which COMPETE with ACh at the receptor."},
+  {t:"Clinical",q:"Novichok and other nerve agents work by inhibiting AChE. What is the consequence?",o:["Less ACh in the synapse causing muscle weakness","ACh ACCUMULATES causing continuous receptor activation → excessive muscle stimulation, then paralysis and death","Dopamine floods the synapse causing psychosis","GABA activity is blocked causing seizures"],a:1,fb:"From Prof Butt: acetylcholinesterase inhibitors prevent ACh degradation → ACh accumulates → CONTINUOUS overstimulation of nicotinic and muscarinic receptors → excessive secretions, muscle fasciculations, convulsions, paralysis, death. Therapeutic AChE inhibitors (donepezil, neostigmine, pyridostigmine) are used at safe doses for Alzheimer's and myasthenia gravis."},
+  {t:"Clinical",q:"L-DOPA is used in Parkinson's disease. Why is it used instead of dopamine directly?",o:["Dopamine is too expensive to manufacture","L-DOPA is more potent than dopamine at D2 receptors","L-DOPA crosses the blood-brain barrier; dopamine itself cannot","L-DOPA has fewer side effects than dopamine"],a:2,fb:"From Dr Aslanoglou: Parkinson's = loss of dopaminergic neurons in the SUBSTANTIA NIGRA → dopamine deficiency in striatum. Dopamine itself CANNOT cross the blood-brain barrier. L-DOPA (dopamine precursor) CAN cross the BBB via amino acid transporters and is then converted to dopamine in the brain. It is given with carbidopa (DOPA decarboxylase inhibitor) to prevent peripheral conversion."},
+  {t:"Clinical",q:"In myasthenia gravis, antibodies attack nicotinic ACh receptors at the NMJ. What type of drug helps?",o:["Muscarinic antagonists to reduce side effects","AChE inhibitors (e.g. neostigmine) — more ACh available to compete for remaining receptors","D2 receptor agonists to compensate","Na+ channel blockers to reduce muscle hyperexcitability"],a:1,fb:"Myasthenia gravis = autoimmune destruction of nicotinic AChR at the NMJ → insufficient receptor activation → muscle weakness. Treatment: AChE INHIBITORS (neostigmine, pyridostigmine) prevent ACh breakdown → more ACh in the cleft → better chance of activating the remaining receptors. Also: immunosuppressants to reduce antibody production, and thymectomy."},
+  {t:"Clinical",q:"Tubocurarine (curare) causes muscle relaxation during surgery by:",o:["Inhibiting AChE causing sustained depolarisation","Blocking K+ channels at the NMJ","Competitively blocking nicotinic ACh receptors — competes with ACh at the synapse","Activating GABA-A receptors to hyperpolarise muscle cells"],a:2,fb:"From Prof Butt: tubocurarine is a NON-DEPOLARISING BLOCKING AGENT — a competitive nicotinic receptor ANTAGONIST. It competes with ACh for the binding site at the NMJ but does NOT activate the receptor → no muscle contraction → muscle relaxation for surgery. Compare with DEPOLARISING blockers (suxamethonium) which ACT LIKE ACh — activating then causing sustained depolarisation block."},
+  {t:"Clinical",q:"Why does spinal cord injury cause permanent paralysis below the level of injury?",o:["Lower motor neurons die immediately after injury","Inflammation destroys all neurotransmitter stores","Astrocytes form an inhibitory glial scar blocking CNS axon regeneration; ascending/descending tracts are severed","The meninges compress the cord preventing blood flow"],a:2,fb:"From Prof Butt: spinal cord 'transection' severs ascending sensory and descending motor tracts. Unlike PNS (where Schwann cells enable regeneration), CNS regeneration is inhibited by reactive astrocytes forming a GLIAL SCAR. The scar physically and chemically blocks axon regrowth. Research aims to modulate the glial scar to allow functional recovery after spinal injury."},
+  {t:"Clinical",q:"SSRIs (e.g. sertraline, citalopram) treat depression by:",o:["Blocking MAO enzymes to prevent serotonin degradation","Inhibiting the SEROTONIN REUPTAKE TRANSPORTER (SERT) — more 5-HT remains in the synapse","Activating D2 receptors to increase dopamine signalling","Blocking glutamate NMDA receptors"],a:1,fb:"From Dr Aslanoglou: SSRIs = Selective Serotonin Reuptake Inhibitors. They block SERT (serotonin reuptake transporter) on the presynaptic terminal → serotonin CANNOT be reuptaken → accumulates in the synapse → prolonged postsynaptic receptor activation. MAOIs (monoamine oxidase inhibitors) also increase serotonin but by preventing degradation — different mechanism, more side effects."},
+  {t:"Clinical",q:"Ketamine is a drug of abuse but also used clinically. What is its receptor target?",o:["GABA-A ionotropic receptor agonist","Dopamine D2 receptor agonist","NMDA glutamate receptor ANTAGONIST","Muscarinic M1 receptor agonist"],a:2,fb:"From Dr Aslanoglou's glutamate pharmacology: ketamine is an NMDA RECEPTOR ANTAGONIST. At sub-anaesthetic doses it produces dissociative, hallucinogenic effects and is abused recreationally ('Special K'). Clinically used as an anaesthetic and increasingly as a rapid-acting antidepressant (esketamine/Spravato) for treatment-resistant depression, thought to work by promoting synaptic plasticity."},
+];
+
+// group by topic
+const BY_TOPIC = {};
+BANK.forEach(q=>{ if(!BY_TOPIC[q.t]) BY_TOPIC[q.t]=[]; BY_TOPIC[q.t].push(q); });
+
+let selectedTopics = new Set(Object.keys(TOPICS));
+let numQ = 10;
+let qs=[], cur=0, score=0, answers=[];
+
+function buildTopicGrid(){
+  const grid = document.getElementById('topic-grid');
+  grid.innerHTML = '';
+  Object.entries(TOPICS).forEach(([name, style])=>{
+    const count = (BY_TOPIC[name]||[]).length;
+    const sel = selectedTopics.has(name);
+    const btn = document.createElement('button');
+    btn.className = 'topic-btn' + (sel?' sel':'');
+    btn.innerHTML = `<span class="tb-icon">${style.icon}</span><span class="tb-name">${name}</span><span class="tb-count">${count}q</span>`;
+    btn.onclick = ()=>{ toggleTopic(name); };
+    grid.appendChild(btn);
+  });
+  updateStartBtn();
+}
+function toggleTopic(name){
+  if(selectedTopics.has(name)) selectedTopics.delete(name);
+  else selectedTopics.add(name);
+  buildTopicGrid();
+}
+function selAll(){ selectedTopics = new Set(Object.keys(TOPICS)); buildTopicGrid(); }
+function selNone(){ selectedTopics.clear(); buildTopicGrid(); }
+function setN(n){
+  numQ = n;
+  document.querySelectorAll('.q-count-btn').forEach(b=>{
+    b.classList.toggle('sel', parseInt(b.dataset.n)===n);
+  });
+}
+function updateStartBtn(){
+  const total = [...selectedTopics].reduce((s,t)=>s+(BY_TOPIC[t]||[]).length,0);
+  document.getElementById('btn-start').disabled = total===0;
+}
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');window.scrollTo(0,0)}
+function goHome(){ show('s-start'); }
+
+function startGame(){
+  let pool = [];
+  selectedTopics.forEach(t=>{ pool = pool.concat(BY_TOPIC[t]||[]); });
+  pool = shuffle(pool);
+  qs = numQ===0 ? pool : pool.slice(0, Math.min(numQ, pool.length));
+  cur=0; score=0; answers=[];
+  show('q-screen');
+  render();
+}
+
+function render(){
+  const q=qs[cur];
+  const total=qs.length;
+  document.getElementById('q-num').textContent=`Question ${cur+1} of ${total}`;
+  document.getElementById('live-score').textContent=score;
+  document.getElementById('prog').style.width=Math.round((cur/total)*100)+'%';
+  const st=TOPICS[q.t]||TOPICS["Neurophysiology"];
+  const badge=document.getElementById('topic-badge');
+  badge.textContent=st.icon+' '+q.t;
+  badge.style.cssText=`background:${st.bg};border:1px solid ${st.border};color:${st.col}`;
+  document.getElementById('q-text').textContent=q.q;
+  document.getElementById('fb').className='fb';
+  document.getElementById('compliment').className='compliment';
+  document.getElementById('nw').className='next-wrap';
+  const opts=document.getElementById('opts');
+  opts.innerHTML='';
+  ['A','B','C','D'].forEach((l,i)=>{
+    const btn=document.createElement('button');
+    btn.className='opt';
+    btn.innerHTML=`<span class="opt-letter">${l}</span><span>${q.o[i]}</span>`;
+    btn.onclick=()=>answer(i);
+    opts.appendChild(btn);
+  });
+  document.getElementById('nb').textContent=cur+1<qs.length?'Next question →':'See results →';
+}
+
+function answer(idx){
+  const q=qs[cur];
+  const ok=idx===q.a;
+  if(ok) score++;
+  answers.push({q,chosen:idx,correct:ok});
+  document.querySelectorAll('.opt').forEach((b,i)=>{
+    b.disabled=true;
+    if(i===q.a) b.classList.add('correct');
+    else if(i===idx&&!ok) b.classList.add('wrong');
+  });
+  if(ok){
+    const c=document.getElementById('compliment');
+    c.textContent=COMPLIMENTS[Math.floor(Math.random()*COMPLIMENTS.length)];
+    c.className='compliment show';
+  }
+  const fb=document.getElementById('fb');
+  fb.className='fb show '+(ok?'ok':'no');
+  document.getElementById('fb-title').textContent=ok?'✅ Correct!':'❌ Not quite';
+  document.getElementById('fb-body').textContent=q.fb;
+  document.getElementById('live-score').textContent=score;
+  document.getElementById('nw').className='next-wrap show';
+}
+
+function nextQ(){ cur++; if(cur<qs.length) render(); else showResults(); }
+
+function showResults(){
+  show('r-screen');
+  const total=qs.length;
+  const pct=Math.round((score/total)*100);
+  const passed=pct>=80;
+
+  document.getElementById('r-emoji').textContent=pct===100?'🏆':passed?'🎉':'📖';
+  document.getElementById('r-title').textContent=passed?`You smashed it, Rose!`:`Keep going, Rose!`;
+  document.getElementById('r-sub').textContent=`${score}/${total} correct (${pct}%) — ${passed?'passed! 🎊':`need 80% to pass`}`;
+
+  // LOVE CARD
+  const card=document.getElementById('love-card');
+  if(passed){
+    card.className='love-card pass';
+    document.getElementById('love-hearts').textContent='💜💜💜';
+    document.getElementById('love-title').textContent='I love you ♡';
+    document.getElementById('love-msg').textContent="You've got this Rose — you absolutely have! I knew you could do it. I am so proud of you and I love you so much. God bless you always. 🌸✨";
+    launchConfetti();
+    spawnHearts();
+  } else {
+    card.className='love-card fail';
+    document.getElementById('love-hearts').textContent='💙💙💙';
+    document.getElementById('love-title').textContent='I still love you ♡';
+    document.getElementById('love-msg').textContent="Hey — I still love you just as much. You've got this, I promise. Take a breath, review the topics below, and try again. I believe in you completely. God bless you Rose. 💙";
+  }
+
+  // RING
+  const rf=document.getElementById('ring-fill');
+  setTimeout(()=>{
+    rf.style.strokeDashoffset=314-(314*(pct/100));
+    rf.style.stroke=passed?'#a78bfa':'#60a5fa';
+  },100);
+  document.getElementById('ring-pct').textContent=pct+'%';
+
+  // BREAKDOWN by topic
+  const cats={};
+  answers.forEach(a=>{
+    if(!cats[a.q.t]) cats[a.q.t]={total:0,correct:0};
+    cats[a.q.t].total++;
+    if(a.correct) cats[a.q.t].correct++;
+  });
+
+  const bkRows=document.getElementById('bk-rows');
+  bkRows.innerHTML='';
+  const catEntries=Object.entries(cats);
+  catEntries.forEach(([t,d])=>{
+    const p=Math.round((d.correct/d.total)*100);
+    const col=TOPICS[t]?TOPICS[t].col:'#a78bfa';
+    let badge='';
+    if(p>=80) badge=`<span class="bk-badge" style="background:rgba(16,185,129,.15);color:#10b981">Strong</span>`;
+    else if(p>=50) badge=`<span class="bk-badge" style="background:rgba(251,191,36,.15);color:#fbbf24">OK</span>`;
+    else badge=`<span class="bk-badge" style="background:rgba(239,68,68,.15);color:#ef4444">Revise</span>`;
+    bkRows.innerHTML+=`<div class="bk-row">
+      <div class="bk-left"><div class="bk-name">${TOPICS[t]?TOPICS[t].icon:''} ${t}</div>${badge}</div>
+      <div class="bk-bar-wrap"><div class="bk-bar" style="width:${p}%;background:${col}"></div></div>
+      <span class="bk-score">${d.correct}/${d.total}</span>
+    </div>`;
+  });
+
+  // STRENGTHS & WEAKNESSES
+  const sg=document.getElementById('strength-grid');
+  sg.innerHTML='';
+  const sorted=catEntries.sort((a,b)=>(b[1].correct/b[1].total)-(a[1].correct/a[1].total));
+  const ss=document.getElementById('strength-section');
+  if(sorted.length>=2){
+    ss.style.display='block';
+    const best=sorted[0];
+    const worst=sorted[sorted.length-1];
+    const bp=Math.round((best[1].correct/best[1].total)*100);
+    const wp=Math.round((worst[1].correct/worst[1].total)*100);
+    sg.innerHTML=`
+      <div class="strength-card strong">
+        <div class="sc-label">💪 Strength</div>
+        <div class="sc-topic">${TOPICS[best[0]]?TOPICS[best[0]].icon:''} ${best[0]}</div>
+        <div class="sc-pct">${bp}% correct — keep it up!</div>
+      </div>
+      <div class="strength-card weak">
+        <div class="sc-label">📖 Focus on this</div>
+        <div class="sc-topic">${TOPICS[worst[0]]?TOPICS[worst[0]].icon:''} ${worst[0]}</div>
+        <div class="sc-pct">${wp}% correct — revisit your notes</div>
+      </div>`;
+  } else { ss.style.display='none'; }
+
+  // MISSED
+  const missed=answers.filter(a=>!a.correct);
+  const ms=document.getElementById('missed-sec');
+  if(missed.length>0){
+    ms.style.display='block';
+    document.getElementById('missed-list').innerHTML=missed.map(a=>
+      `<div class="missed-item"><div class="missed-q">${a.q.q}</div><div class="missed-a">✓ ${a.q.o[a.q.a]}</div></div>`
+    ).join('');
+  } else { ms.style.display='none'; }
+}
+
+function launchConfetti(){
+  const canvas=document.getElementById('confetti-canvas');
+  const ctx=canvas.getContext('2d');
+  canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+  const pieces=Array.from({length:130},()=>({
+    x:Math.random()*canvas.width, y:Math.random()*canvas.height-canvas.height,
+    r:Math.random()*7+3, d:Math.random()*3+1,
+    color:['#a78bfa','#ec4899','#60a5fa','#34d399','#fbbf24','#f472b6'][Math.floor(Math.random()*6)],
+    tilt:Math.random()*10-10, tiltAngle:0, tiltSpeed:Math.random()*.1+.05
+  }));
+  let frame=0;
+  (function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    pieces.forEach(p=>{
+      ctx.beginPath(); ctx.lineWidth=p.r/2; ctx.strokeStyle=p.color;
+      ctx.moveTo(p.x+p.tilt+p.r/4,p.y); ctx.lineTo(p.x+p.tilt,p.y+p.tilt+p.r/4); ctx.stroke();
+      p.tiltAngle+=p.tiltSpeed; p.y+=(Math.cos(frame/10+p.d)+p.d+p.r/10)*.8; p.tilt=Math.sin(p.tiltAngle)*12;
+      if(p.y>canvas.height){p.y=-10; p.x=Math.random()*canvas.width;}
+    });
+    frame++; if(frame<350) requestAnimationFrame(draw); else ctx.clearRect(0,0,canvas.width,canvas.height);
+  })();
+}
+
+function spawnHearts(){
+  const emojis=['💜','🌸','💕','✨','💫','🥰','💖','🌟'];
+  for(let i=0;i<14;i++){
+    setTimeout(()=>{
+      const h=document.createElement('div');
+      h.className='heart-float';
+      h.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+      h.style.left=Math.random()*100+'vw';
+      h.style.bottom='20px';
+      h.style.animationDuration=(2+Math.random()*2)+'s';
+      document.body.appendChild(h);
+      setTimeout(()=>h.remove(),4500);
+    },i*180);
+  }
+}
+
+// INIT
+buildTopicGrid();
+</script>
+</body>
+</html>
